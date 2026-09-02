@@ -1,0 +1,6 @@
+# Minimal Supabase CLI project config. Run `supabase link --project-ref <ref>`
+# once (see DEPLOYMENT.md) before `supabase db push` / `supabase functions deploy`.
+project_id = "tally-gst-invoice-register"
+
+[functions.process-ledger]
+verify_jwt = true

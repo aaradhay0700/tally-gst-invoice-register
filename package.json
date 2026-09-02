@@ -1,0 +1,35 @@
+{
+  "name": "tally-gst-invoice-register-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Web front end for the Tally GST-Ledger Invoice Register skill: upload a Tally GST ledger PDF, get back a formatted multi-tab Excel invoice register. Backend runs on Supabase (Auth, Storage, Postgres, Edge Functions); front end deploys to Netlify.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "test:harness": "tsx scripts/test-harness/run_pipeline_test.ts",
+    "test:pdf-layout": "tsx scripts/test-harness/pdf_layout_test.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.45",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3",
+    "exceljs": "^4.4.0",
+    "pdfjs-dist": "^4.6.82",
+    "pdf-lib": "^1.17.1",
+    "tsx": "^4.19.1"
+  }
+}

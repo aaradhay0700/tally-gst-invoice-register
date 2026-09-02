@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode/
+supabase/.branches/
+supabase/.temp/
+scripts/test-harness/node_modules/
+scripts/test-harness/*.xlsx
+scripts/test-harness/fixtures/*.txt
+.claude/

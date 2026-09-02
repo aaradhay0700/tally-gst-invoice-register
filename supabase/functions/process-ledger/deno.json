@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "exceljs": "npm:exceljs@4.4.0",
+    "pdfjs-dist/legacy/build/pdf.mjs": "npm:pdfjs-dist@4.6.82/legacy/build/pdf.mjs",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.45.4"
+  }
+}
