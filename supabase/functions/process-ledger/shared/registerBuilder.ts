@@ -241,6 +241,9 @@ export function buildWorkbook(params: BuildWorkbookParams): ExcelJS.Workbook {
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Tally GST Invoice Register'
   wb.created = new Date()
+  // Without an explicit <bookViews>, ExcelJS omits it from workbook.xml and
+  // Excel opens a blank grey window with no active sheet or tabs.
+  wb.views = [{ x: 0, y: 0, width: 28800, height: 17000, firstSheet: 0, activeTab: 0, visibility: 'visible' }]
 
   // ---- Master ----
   const wsMaster = wb.addWorksheet('Master')
