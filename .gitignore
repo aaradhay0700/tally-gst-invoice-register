@@ -12,4 +12,3 @@ supabase/.temp/
 scripts/test-harness/node_modules/
 scripts/test-harness/*.xlsx
 scripts/test-harness/fixtures/*.txt
-.claude/

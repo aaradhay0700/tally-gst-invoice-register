@@ -740,39 +740,6 @@ export function classifyAndTabulate(vouchers: Voucher[]): VoucherRow[] {
 // same extracted strings.
 const XML_INVALID_CHARS_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g
 
-// --------------------------------------------------------------------------
-// Ledger header metadata (company / state / period) -- Tally repeats this
-// same header block identically at the top of every page (company name,
-// address, "Group: GST-<State>", "Ledger: ...", the report's own date
-// range, "Page N"), so the first occurrence in the whole document is enough.
-// --------------------------------------------------------------------------
-
-export interface LedgerMeta {
-  company: string | null
-  state: string | null
-  periodStartRaw: string | null
-  periodEndRaw: string | null
-}
-
-const GROUP_STATE_RE = /Group:\s*GST[\s-]*(.+)/
-const PERIOD_RANGE_RE = /(\d{1,2}-[A-Za-z]{3}-\d{2,4})\s+to\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/
-
-export function extractLedgerMeta(rawLayoutText: string): LedgerMeta {
-  const layoutText = rawLayoutText.replace(XML_INVALID_CHARS_RE, '')
-  const firstLine = layoutText
-    .split('\n')
-    .map((l) => l.trim())
-    .find((l) => l !== '')
-  const stateMatch = GROUP_STATE_RE.exec(layoutText)
-  const periodMatch = PERIOD_RANGE_RE.exec(layoutText)
-  return {
-    company: firstLine ?? null,
-    state: stateMatch ? stateMatch[1].trim() : null,
-    periodStartRaw: periodMatch ? periodMatch[1] : null,
-    periodEndRaw: periodMatch ? periodMatch[2] : null,
-  }
-}
-
 export function extractVouchers(rawLayoutText: string): ExtractionResult {
   const layoutText = rawLayoutText.replace(XML_INVALID_CHARS_RE, '')
   const entries = parseRawEntries(layoutText)
@@ -826,4 +793,49 @@ export function rowsToCsv(rows: VoucherRow[]): string {
     lines.push(CSV_COLUMNS.map((c) => csvEscape(row[c])).join(','))
   }
   return lines.join('\r\n') + '\r\n'
+}
+
+// --------------------------------------------------------------------------
+// Header metadata (company / state / period) for browser-local mode
+// --------------------------------------------------------------------------
+
+export interface LedgerMeta {
+  company: string | null
+  state: string | null
+  periodStartRaw: string | null
+  periodEndRaw: string | null
+}
+
+const PERIOD_RE = /(\d{1,2}-[A-Za-z]{3}-\d{2,4})\s+to\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/
+const GROUP_STATE_RE = /^Group:\s*GST[-\s]+(.+?)\s*$/i
+
+/**
+ * Best-effort read of the printout's own header. Anything not found comes
+ * back null so callers can show "(not detected)" instead of a guess.
+ *   - company: first non-blank line that isn't a Group:/Ledger:/Date/Page line
+ *   - state:   from a "Group: GST-<State>" line
+ *   - period:  first "<d-Mon-yy> to <d-Mon-yy>" range in the text
+ */
+export function extractLedgerMeta(rawLayoutText: string): LedgerMeta {
+  const lines = rawLayoutText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  let company: string | null = null
+  let state: string | null = null
+  let periodStartRaw: string | null = null
+  let periodEndRaw: string | null = null
+
+  for (const line of lines) {
+    if (!state) {
+      const g = GROUP_STATE_RE.exec(line)
+      if (g) state = g[1]
+    }
+    if (!periodStartRaw) {
+      const p = PERIOD_RE.exec(line)
+      if (p) [, periodStartRaw, periodEndRaw] = p
+    }
+    if (!company && !/^(Group:|Ledger:|Date\b|Page\b|CIN:|continued)/i.test(line) && !DATE_RE.test(line)) {
+      company = line.split(TWO_SPACE_SPLIT_RE)[0]
+    }
+    if (company && state && periodStartRaw) break
+  }
+  return { company, state, periodStartRaw, periodEndRaw }
 }
