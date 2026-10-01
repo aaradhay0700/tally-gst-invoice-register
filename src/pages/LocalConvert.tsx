@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useAuth } from '../lib/auth'
 import { listHistory, saveHistory, deleteHistory, type HistoryEntry } from '../lib/history'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { pdfBufferToLayoutText } from '../../supabase/functions/process-ledger/shared/pdfLayout.ts'
@@ -47,11 +48,12 @@ export default function LocalConvert() {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<RunResult | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const userId = useAuth().session?.user.id ?? ''
 
-  const refreshHistory = () => listHistory().then(setHistory).catch(() => setHistory([]))
+  const refreshHistory = () => listHistory(userId).then(setHistory).catch(() => setHistory([]))
   useEffect(() => {
     void refreshHistory()
-  }, [])
+  }, [userId])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -99,6 +101,7 @@ export default function LocalConvert() {
       setStage(null)
       try {
         await saveHistory({
+          userId,
           sourceFilename: file.name,
           baseFilename: file.name.replace(/.pdf$/i, '') || 'invoice-register',
           company,

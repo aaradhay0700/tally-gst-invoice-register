@@ -16,11 +16,16 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          {/* Local-only mode (no Supabase account needed): runs entirely in
-              the browser. This is the landing page until the Supabase
-              backend + Netlify deploy from DEPLOYMENT.md are set up, at
-              which point swap this back to Dashboard. */}
-          <Route path="/" element={<LocalConvert />} />
+          {/* Conversion runs entirely in the browser, but the app itself is
+              behind sign-in. */}
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <LocalConvert />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/dashboard"
             element={

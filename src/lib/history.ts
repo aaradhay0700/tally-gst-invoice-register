@@ -3,6 +3,7 @@
 
 export interface HistoryEntry {
   id: string
+  userId: string
   createdAt: number
   sourceFilename: string
   baseFilename: string
@@ -38,9 +39,9 @@ function run<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<
   )
 }
 
-export async function listHistory(): Promise<HistoryEntry[]> {
+export async function listHistory(userId: string): Promise<HistoryEntry[]> {
   const all = await run<HistoryEntry[]>('readonly', (s) => s.getAll())
-  return all.sort((a, b) => b.createdAt - a.createdAt)
+  return all.filter((e) => e.userId === userId).sort((a, b) => b.createdAt - a.createdAt)
 }
 
 export async function saveHistory(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): Promise<void> {
