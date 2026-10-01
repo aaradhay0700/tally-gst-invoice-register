@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { listHistory, saveHistory, deleteHistory, type HistoryEntry } from '../lib/history'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { pdfBufferToLayoutText } from '../../supabase/functions/process-ledger/shared/pdfLayout.ts'
 import { extractVouchers, extractLedgerMeta, rowsToCsv, type ExtractionResult } from '../../supabase/functions/process-ledger/shared/voucherParser.ts'
@@ -45,6 +46,12 @@ export default function LocalConvert() {
   const [stage, setStage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<RunResult | null>(null)
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+
+  const refreshHistory = () => listHistory().then(setHistory).catch(() => setHistory([]))
+  useEffect(() => {
+    void refreshHistory()
+  }, [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -90,6 +97,22 @@ export default function LocalConvert() {
         period,
       })
       setStage(null)
+      try {
+        await saveHistory({
+          sourceFilename: file.name,
+          baseFilename: file.name.replace(/.pdf$/i, '') || 'invoice-register',
+          company,
+          state,
+          period,
+          voucherCount: extraction.voucherCount,
+          verificationPassed: extraction.mismatches.length === 0,
+          xlsx: xlsxBuffer as ArrayBuffer,
+          csv,
+        })
+        await refreshHistory()
+      } catch {
+        // History is a convenience; a storage failure must not hide the result.
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setStage(null)
@@ -101,13 +124,10 @@ export default function LocalConvert() {
   const verificationPassed = result !== null && mismatches.length === 0
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-lg font-semibold text-slate-900 mb-1">New invoice register (local mode)</h1>
-      <p className="text-sm text-slate-500 mb-6">
-        Runs entirely in this browser tab — no sign-in, no upload to any server. Upload a Tally-exported GST ledger
-        PDF (a control-account printout with "(as per details)" journal breakdowns, one page per CGST/SGST/IGST
-        rate) and download the formatted Excel register directly. Company name, state and period are read straight
-        from the PDF's own header — check the detected values in the results below before trusting the file.
+    <div className="max-w-3xl">
+      <p className="text-sm text-slate-600 mb-6">
+        Upload a Tally GST-ledger PDF and get a formatted, per-rate Excel invoice register. Everything runs in your
+        browser — nothing is uploaded.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-5 bg-white border border-slate-200 rounded-xl p-6">
@@ -241,6 +261,52 @@ export default function LocalConvert() {
           </div>
         </div>
       )}
+
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold text-slate-900 mb-2">History</h2>
+        {history.length === 0 ? (
+          <p className="text-sm text-slate-500">No registers generated yet. They will appear here, saved in this browser.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100 bg-white border border-slate-200 rounded-xl">
+            {history.map((h) => (
+              <li key={h.id} className="p-4 text-sm flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900 truncate">{h.sourceFilename}</p>
+                  <p className="text-xs text-slate-500">
+                    {h.company} — {h.state}, {h.period} · {h.voucherCount} vouchers ·{' '}
+                    <span className={h.verificationPassed ? 'text-green-700' : 'text-red-700'}>
+                      verification {h.verificationPassed ? 'passed' : 'failed'}
+                    </span>{' '}
+                    · {new Date(h.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex gap-3 text-xs font-medium">
+                  <button
+                    className="text-brand-600 hover:text-brand-700"
+                    onClick={() =>
+                      downloadBlob(h.xlsx, `${h.baseFilename}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                    }
+                  >
+                    Excel
+                  </button>
+                  <button
+                    className="text-brand-600 hover:text-brand-700"
+                    onClick={() => downloadBlob(h.csv, `${h.baseFilename}_vouchers.csv`, 'text/csv')}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    className="text-slate-400 hover:text-red-600"
+                    onClick={() => deleteHistory(h.id).then(refreshHistory)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

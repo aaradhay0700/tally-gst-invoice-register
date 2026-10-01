@@ -16,8 +16,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-semibold text-brand-900">
-            Tally GST Invoice Register
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/sandmartin-logo.png" alt="SandMartin" className="h-9 w-auto" />
+            <span className="font-semibold text-brand-900 border-l border-slate-200 pl-3">Tally GST Invoice Register</span>
           </Link>
           {session && (
             <div className="flex items-center gap-4 text-sm">
