@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabaseClient'
 
@@ -63,12 +63,6 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <p className="text-sm text-slate-500 mt-6">
-          No account yet?{' '}
-          <Link to="/signup" className="text-brand-600 font-medium">
-            Create one
-          </Link>
-        </p>
       </div>
     </div>
   )

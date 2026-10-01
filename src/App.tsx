@@ -3,7 +3,6 @@ import { AuthProvider } from './lib/auth'
 import RequireAuth from './components/RequireAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
-import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import NewJob from './pages/NewJob'
 import JobDetail from './pages/JobDetail'
@@ -15,7 +14,6 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
           {/* Conversion runs entirely in the browser, but the app itself is
               behind sign-in. */}
           <Route
